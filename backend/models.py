@@ -48,11 +48,13 @@ class Question(db.Model):
         db.session.commit()
 
     def format(self):
+        category = db.session.get(Category, int(self.category)) if self.category else None
+
         return {
             'id': self.id,
             'question': self.question,
             'answer': self.answer,
-            'category': self.category,
+            'category': category.type if category else None,
             'difficulty': self.difficulty
         }
 

@@ -77,8 +77,6 @@ def create_app(test_config=None):
     """
     @app.route('/questions', methods=['GET'])
     def get_questions():
-        page = request.args.get('page', 1, type=int)
-
         selection = Question.query.order_by(Question.id).all()
         current_questions = paginate_questions(request, selection)
 
@@ -98,6 +96,7 @@ def create_app(test_config=None):
             'categories': formatted_categories,
             'currentCategory': None
         })
+
     """
     @TODO:
     Create an endpoint to DELETE question using a question ID.
@@ -167,7 +166,7 @@ def create_app(test_config=None):
                 question=question,
                 answer=answer,
                 difficulty=difficulty,
-                category=category
+                category=str(category)  # FIX: ensure string
             )
             new_question.insert()
 
@@ -220,7 +219,7 @@ def create_app(test_config=None):
 
         if quiz_category and int(quiz_category.get('id')) != 0:
             questions = Question.query.filter_by(
-                category=str(quiz_category.get('id'))
+                category=str(quiz_category.get('id'))  # FIX
             ).all()
         else:
             questions = Question.query.all()
@@ -241,10 +240,19 @@ def create_app(test_config=None):
             'success': True,
             'question': question.format()
         })
+
     """
     @TODO:
     Create error handlers for all expected errors.
     """
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            'success': False,
+            'error': 400,
+            'message': 'bad request'
+        }), 400
+
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
@@ -260,5 +268,13 @@ def create_app(test_config=None):
             'error': 422,
             'message': 'unprocessable'
         }), 422
+
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({
+            'success': False,
+            'error': 500,
+            'message': 'internal server error'
+        }), 500
 
     return app
