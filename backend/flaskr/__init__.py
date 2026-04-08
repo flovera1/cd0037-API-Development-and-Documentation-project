@@ -77,8 +77,13 @@ def create_app(test_config=None):
     """
     @app.route('/questions', methods=['GET'])
     def get_questions():
+        page = request.args.get('page', 1, type=int)
+
         selection = Question.query.order_by(Question.id).all()
         current_questions = paginate_questions(request, selection)
+
+        if len(selection) == 0:
+            abort(404)
 
         if len(current_questions) == 0:
             abort(404)
@@ -93,24 +98,25 @@ def create_app(test_config=None):
             'categories': formatted_categories,
             'currentCategory': None
         })
-
     """
     @TODO:
     Create an endpoint to DELETE question using a question ID.
     """
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
-        question = Question.query.get(question_id)
+        question = db.session.get(Question, question_id)
 
         if question is None:
             abort(404)
 
         try:
             question.delete()
+
             return jsonify({
                 'success': True,
                 'deleted': question_id
-            })
+            }), 200
+
         except:
             abort(422)
 
@@ -126,7 +132,9 @@ def create_app(test_config=None):
         if body is None:
             abort(400)
 
+        # ---------------------------
         # SEARCH
+        # ---------------------------
         if 'searchTerm' in body:
             search_term = body.get('searchTerm', '')
 
@@ -134,14 +142,18 @@ def create_app(test_config=None):
                 Question.question.ilike(f'%{search_term}%')
             ).all()
 
+            current_questions = paginate_questions(request, results)
+
             return jsonify({
                 'success': True,
-                'questions': [q.format() for q in results],
+                'questions': current_questions,
                 'totalQuestions': len(results),
                 'currentCategory': None
             })
 
+        # ---------------------------
         # CREATE
+        # ---------------------------
         question = body.get('question')
         answer = body.get('answer')
         difficulty = body.get('difficulty')
@@ -150,18 +162,22 @@ def create_app(test_config=None):
         if not all([question, answer, difficulty, category]):
             abort(400)
 
-        new_question = Question(
-            question=question,
-            answer=answer,
-            difficulty=difficulty,
-            category=category
-        )
-        new_question.insert()
+        try:
+            new_question = Question(
+                question=question,
+                answer=answer,
+                difficulty=difficulty,
+                category=category
+            )
+            new_question.insert()
 
-        return jsonify({
-            'success': True,
-            'created': new_question.id
-        })
+            return jsonify({
+                'success': True,
+                'created': new_question.id
+            })
+
+        except:
+            abort(422)
 
     """
     @TODO:
@@ -169,16 +185,21 @@ def create_app(test_config=None):
     """
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def get_questions_by_category(category_id):
-        category = Category.query.get(category_id)
+
+        category = db.session.get(Category, category_id)
 
         if category is None:
             abort(404)
 
-        questions = Question.query.filter_by(category=str(category_id)).all()
+        questions = Question.query.filter_by(
+            category=str(category_id)
+        ).all()
+
+        current_questions = paginate_questions(request, questions)
 
         return jsonify({
             'success': True,
-            'questions': [q.format() for q in questions],
+            'questions': current_questions,
             'totalQuestions': len(questions),
             'currentCategory': category.type
         })
@@ -220,7 +241,6 @@ def create_app(test_config=None):
             'success': True,
             'question': question.format()
         })
-
     """
     @TODO:
     Create error handlers for all expected errors.
