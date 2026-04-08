@@ -4,7 +4,8 @@ database_name = 'trivia'
 database_user = 'postgres'
 database_password = 'password'
 database_host = 'localhost:5432'
-database_path = f'postgresql://{database_user}:{database_password}@{database_host}/{database_name}'
+# database_path = f'postgresql://{database_user}:{database_password}@{database_host}/{database_name}'
+database_path = "sqlite:///trivia.db"
 
 db = SQLAlchemy()
 

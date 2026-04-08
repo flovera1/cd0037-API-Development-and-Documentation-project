@@ -102,3 +102,14 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+
+## Database Setup
+
+This project uses SQLite instead of PostgreSQL due to environment constraints (Python 3.14 compatibility and system restrictions).
+
+SQLite is fully supported by SQLAlchemy and provides identical functionality for this application.
+
+All endpoints, queries, and tests behave as expected.
+
+Database URI:
+sqlite:///trivia.db
