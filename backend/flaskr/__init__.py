@@ -19,6 +19,7 @@ def paginate_questions(request, selection):
 
 
 def create_app(test_config=None):
+    # create and configure the app
     app = Flask(__name__)
 
     if test_config is None:
@@ -27,11 +28,17 @@ def create_app(test_config=None):
         database_path = test_config.get('SQLALCHEMY_DATABASE_URI')
         setup_db(app, database_path=database_path)
 
+    """
+    @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+    """
     CORS(app, resources={r"/*": {"origins": "*"}})
 
     with app.app_context():
         db.create_all()
 
+    """
+    @TODO: Use the after_request decorator to set Access-Control-Allow
+    """
     @app.after_request
     def after_request(response):
         response.headers.add(
@@ -44,9 +51,11 @@ def create_app(test_config=None):
         )
         return response
 
-    # ---------------------------
-    # GET CATEGORIES
-    # ---------------------------
+    """
+    @TODO:
+    Create an endpoint to handle GET requests
+    for all available categories.
+    """
     @app.route('/categories', methods=['GET'])
     def get_categories():
         categories = Category.query.all()
@@ -61,9 +70,11 @@ def create_app(test_config=None):
             'categories': formatted
         })
 
-    # ---------------------------
-    # GET QUESTIONS (PAGINATED)
-    # ---------------------------
+    """
+    @TODO:
+    Create an endpoint to handle GET requests for questions,
+    including pagination (every 10 questions).
+    """
     @app.route('/questions', methods=['GET'])
     def get_questions():
         selection = Question.query.order_by(Question.id).all()
@@ -83,9 +94,10 @@ def create_app(test_config=None):
             'currentCategory': None
         })
 
-    # ---------------------------
-    # DELETE QUESTION
-    # ---------------------------
+    """
+    @TODO:
+    Create an endpoint to DELETE question using a question ID.
+    """
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
         question = Question.query.get(question_id)
@@ -102,9 +114,11 @@ def create_app(test_config=None):
         except:
             abort(422)
 
-    # ---------------------------
-    # POST /questions (CREATE + SEARCH)
-    # ---------------------------
+    """
+    @TODO:
+    Create an endpoint to POST a new question,
+    and also handle search functionality.
+    """
     @app.route('/questions', methods=['POST'])
     def create_or_search_question():
         body = request.get_json()
@@ -149,9 +163,10 @@ def create_app(test_config=None):
             'created': new_question.id
         })
 
-    # ---------------------------
-    # GET QUESTIONS BY CATEGORY
-    # ---------------------------
+    """
+    @TODO:
+    Create a GET endpoint to get questions based on category.
+    """
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def get_questions_by_category(category_id):
         category = Category.query.get(category_id)
@@ -168,9 +183,10 @@ def create_app(test_config=None):
             'currentCategory': category.type
         })
 
-    # ---------------------------
-    # QUIZ
-    # ---------------------------
+    """
+    @TODO:
+    Create a POST endpoint to get questions to play the quiz.
+    """
     @app.route('/quizzes', methods=['POST'])
     def play_quiz():
         body = request.get_json()
@@ -205,9 +221,10 @@ def create_app(test_config=None):
             'question': question.format()
         })
 
-    # ---------------------------
-    # ERROR HANDLERS
-    # ---------------------------
+    """
+    @TODO:
+    Create error handlers for all expected errors.
+    """
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
