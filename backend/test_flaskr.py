@@ -1,9 +1,13 @@
 import unittest
+import os
+from dotenv import load_dotenv
 
 from flaskr import create_app
 from models import db, Question, Category
 from settings import TEST_DB_NAME
 
+# Load environment variables
+load_dotenv()
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""

@@ -1,15 +1,19 @@
 from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
+import os
+from dotenv import load_dotenv
 
 from settings import DB_NAME
 
+# Load environment variables from .env file
+load_dotenv()
+
 database_path = f"sqlite:///{DB_NAME}"
-
-database_name = 'trivia'
-database_user = 'postgres'
-database_password = 'password'
-database_host = 'localhost:5432'
-
+    
+database_name = os.getenv('DB_NAME', 'trivia')
+database_user = os.getenv('DB_USER', 'postgres')
+database_password = os.getenv('DB_PASSWORD', 'password')
+database_host = os.getenv('DB_HOST', 'localhost:5432')
 
 db = SQLAlchemy()
 
@@ -21,7 +25,6 @@ def setup_db(app, database_path=database_path):
     app.config['SQLALCHEMY_DATABASE_URI'] = database_path
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
-
 """
 Question
 """
