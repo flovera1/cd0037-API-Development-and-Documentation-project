@@ -1,11 +1,15 @@
 from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
+
+from settings import DB_NAME
+
+database_path = f"sqlite:///{DB_NAME}"
+
 database_name = 'trivia'
 database_user = 'postgres'
 database_password = 'password'
 database_host = 'localhost:5432'
-# database_path = f'postgresql://{database_user}:{database_password}@{database_host}/{database_name}'
-database_path = "sqlite:///trivia.db"
+
 
 db = SQLAlchemy()
 
@@ -48,13 +52,11 @@ class Question(db.Model):
         db.session.commit()
 
     def format(self):
-        category = db.session.get(Category, int(self.category)) if self.category else None
-
         return {
             'id': self.id,
             'question': self.question,
             'answer': self.answer,
-            'category': category.type if category else None,
+            'category': self.category,   # ✅ THIS is the fix
             'difficulty': self.difficulty
         }
 

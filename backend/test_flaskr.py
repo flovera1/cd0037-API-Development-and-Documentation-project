@@ -1,9 +1,8 @@
-import json
-import os
 import unittest
 
 from flaskr import create_app
 from models import db, Question, Category
+from settings import TEST_DB_NAME
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -12,7 +11,7 @@ class TriviaTestCase(unittest.TestCase):
     def setUp(self):
         """Define test variables and initialize app."""
 
-        self.database_path = "sqlite:///trivia_test.db"
+        self.database_path = f"sqlite:///{TEST_DB_NAME}"
 
         self.app = create_app({
             "SQLALCHEMY_DATABASE_URI": self.database_path,
@@ -29,7 +28,6 @@ class TriviaTestCase(unittest.TestCase):
             db.session.add(c1)
             db.session.commit()
 
-            # 🔥 THIS LINE IS MISSING
             self.category_id = c1.id
 
             q = Question(
@@ -46,18 +44,20 @@ class TriviaTestCase(unittest.TestCase):
             db.session.remove()
             db.drop_all()
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
+    
     def test_get_categories(self):
         res = self.client.get('/categories')
         data = res.get_json()
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertTrue(len(data['categories']) >= 0)
+        self.assertTrue(len(data['categories']) > 0)
 
+    def test_get_categories_failure(self):
+        res = self.client.get('/categoriezz')  # invalid route
+        self.assertEqual(res.status_code, 404)
+
+    
     def test_get_questions(self):
         res = self.client.get('/questions')
         data = res.get_json()
@@ -66,10 +66,33 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['success'])
         self.assertIn('questions', data)
 
+    def test_get_questions_failure(self):
+        res = self.client.get('/questions?page=9999')
+        self.assertEqual(res.status_code, 404)
+
+    
     def test_delete_nonexistent_question(self):
         res = self.client.delete('/questions/9999')
         self.assertEqual(res.status_code, 404)
 
+    def test_delete_question_success(self):
+        with self.app.app_context():
+            q = Question(
+                question="Temp",
+                answer="Temp",
+                difficulty=1,
+                category=str(self.category_id)
+            )
+            q.insert()
+            q_id = q.id
+
+        res = self.client.delete(f'/questions/{q_id}')
+        data = res.get_json()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+
+    
     def test_create_question(self):
         new_question = {
             "question": "Test question?",
@@ -84,27 +107,36 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
 
+    def test_create_question_failure(self):
+        res = self.client.post('/questions', json={
+            "question": "Incomplete"
+        })
 
-   
+        self.assertEqual(res.status_code, 400)
 
+    
     def test_search_questions(self):
         res = self.client.post('/questions', json={
             "searchTerm": "Test"
         })
-        print(res)
+        data = res.get_json()
 
-    #     print(res)
-    #     data = res.get_json()
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertIn('questions', data)
+        self.assertIn('totalQuestions', data)
 
-    #     print(data)
+    def test_search_questions_failure(self):
+        res = self.client.post('/questions', json={
+            "searchTerm": "xyz_not_found"
+        })
+        data = res.get_json()
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertTrue(data['success'])
-    #     self.assertIn('questions', data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertEqual(len(data['questions']), 0)
 
-
-
-
+    
     def test_get_questions_by_category(self):
         res = self.client.get(f'/categories/{self.category_id}/questions')
         data = res.get_json()
@@ -112,6 +144,11 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
 
+    def test_get_questions_by_category_failure(self):
+        res = self.client.get('/categories/9999/questions')
+        self.assertEqual(res.status_code, 404)
+
+    
     def test_play_quiz(self):
         res = self.client.post('/quizzes', json={
             "previous_questions": [],
@@ -121,6 +158,17 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-# Make the tests conveniently executable
+
+    def test_quiz_failure(self):
+        res = self.client.post('/quizzes', json={
+            "previous_questions": [],
+            "quiz_category": {"id": 9999}
+        })
+        data = res.get_json()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+
+
 if __name__ == "__main__":
     unittest.main()
