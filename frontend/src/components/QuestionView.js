@@ -148,8 +148,8 @@ class QuestionView extends Component {
                 {this.state.categories[id]}
                 <img
                   className='category'
-                  alt={`${this.state.categories[id].toLowerCase()}`}
-                  src={`${this.state.categories[id].toLowerCase()}.svg`}
+                  alt={`${(this.state.categories[id] || 'default').toLowerCase()}`}
+                  src={`${(this.state.categories[id] || 'default').toLowerCase()}.svg`}
                 />
               </li>
             ))}
@@ -163,7 +163,7 @@ class QuestionView extends Component {
               key={q.id}
               question={q.question}
               answer={q.answer}
-              category={this.state.categories[q.category]}
+              category={this.state.categories[q.category] || 'default'}
               difficulty={q.difficulty}
               questionAction={this.questionAction(q.id)}
             />

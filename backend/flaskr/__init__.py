@@ -28,6 +28,9 @@ def create_app(test_config=None):
         database_path = test_config.get('SQLALCHEMY_DATABASE_URI')
         setup_db(app, database_path=database_path)
 
+    print("APP CREATED")
+    print(app.url_map)
+
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
@@ -59,7 +62,7 @@ def create_app(test_config=None):
     @app.route('/categories', methods=['GET'])
     def get_categories():
         categories = Category.query.all()
-
+        print(categories)
         if len(categories) == 0:
             abort(404)
 
@@ -276,5 +279,7 @@ def create_app(test_config=None):
             'error': 500,
             'message': 'internal server error'
         }), 500
+
+    print(app.url_map)   # ← MOVE HERE
 
     return app
